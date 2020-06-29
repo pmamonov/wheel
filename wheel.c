@@ -5,8 +5,8 @@
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 
-#include "../lcd/lcd.h"
-#include "../time/time.h"
+#include "lcd.h"
+#include "time.h"
 
 //eeprom
 //#define EEPROM_LEN 1024

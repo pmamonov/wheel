@@ -2,6 +2,8 @@ MCU=atmega32
 CS=1.8432
 TSVAL=`echo '65536 - $(CS)*100000/64' | bc`
 
+OBJ=wheel.o lcd.o time.o
+
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 CFLAGS= -g -mmcu=$(MCU) -Wall -Wstrict-prototypes -Os -mcall-prologues \
@@ -17,26 +19,14 @@ all: wheel.hex
 wheel.hex : wheel.out
 	$(OBJCOPY) -R .eeprom -O ihex wheel.out wheel.hex 
 
-wheel.out : wheel.o lcd.o time.o
-	$(CC) $(CFLAGS) -o wheel.out -Wl,-Map,wheel.map wheel.o lcd.o time.o
+wheel.out: $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ)
 
-wheel.o : wheel.c
-	$(CC) $(CFLAGS) -c wheel.c
-
-lcd.o : ../lcd/lcd.c
-	$(CC) $(CFLAGS) -o lcd.o -c ../lcd/lcd.c
-
-time.o : ../time/time.c
-	$(CC) $(CFLAGS) -o time.o -c ../time/time.c
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
 
 load: wheel.hex
 	avrdude -c usbasp -p m32 -U flash:w:wheel.hex:i
 
 clean:
-	rm -f *.o *.map *.out *.hex
-
-#timestamp:
-#	avrdude -c dapa -p m16 -U lfuse:r:lfuse.bin:r && date +%s > timestamp
-#
-#ttest: timestamp
-#	(cat timestamp && date +%s) | awk -F: 'NR==1 {t0=$$0} NR==2 {printf("\n%d:%d:%d\n", int(($$0-t0)/3600), int((($$0-t0)%3600)/60), ($$0-t0)%60); }'
+	rm -f $(OBJ) *.out *.hex
