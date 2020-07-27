@@ -1,18 +1,17 @@
 MCU=atmega32
-CS=1.8432
-TSVAL=`echo '65536 - $(CS)*100000/64' | bc`
+HZ=1843200
 
-OBJ=wheel.o lcd.o time.o
+OBJ=wheel.o lcd.o time.o menu.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
 CFLAGS= -g -mmcu=$(MCU) -Wall -Wstrict-prototypes -Os -mcall-prologues \
- -DEEPROM_LEN=1024 \
- -DF_CPU=`echo '$(CS)*1000000' | bc`L \
+ -DF_CPU=$(HZ)ul \
  -DLCD_PORT_NAME=A \
- -DLCD_TYPE=161 \
- -DTIM_START_VAL=$(TSVAL)
-# -DTIM_START_VAL=0xffff
+ -DLCD_NCHARS=8 \
+ -DEEPROM_LEN=1024
+
+AVRDUDE = avrdude -c usbasp -p m32 -B 10
 
 all: wheel.hex
 
@@ -26,7 +25,10 @@ wheel.out: $(OBJ)
 	$(CC) $(CFLAGS) -c $<
 
 load: wheel.hex
-	avrdude -c usbasp -p m32 -U flash:w:wheel.hex:i
+	$(AVRDUDE) -U flash:w:wheel.hex:i
+
+fuse:
+	$(AVRDUDE) -U lfuse:w:0xfd:m
 
 clean:
 	rm -f $(OBJ) *.out *.hex
