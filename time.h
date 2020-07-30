@@ -1,13 +1,13 @@
-typedef unsigned long int time_t;
+typedef unsigned long time_t;
 
 struct tm {
-  char sec;
-  char min;
-  char hour;
-  char day;
-  char mon;
-  int  year;
+  unsigned char sec;
+  unsigned char min;
+  unsigned char hour;
+  unsigned char day;
+  unsigned char mon;
+  unsigned year;
 };
 
-void date2stamp(struct tm *date, volatile time_t *epoch);
+void date2stamp(struct tm *date, time_t *epoch);
 void stamp2date(time_t epoch, struct tm *date);
