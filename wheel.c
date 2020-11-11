@@ -351,7 +351,7 @@ void wheel_r(struct menu_it *m)
 	unsigned long c = wheel_get();
 
 	snprintf(s, LCD_BS, "PT %d/%d: %ld",
-		 tdata ? datah.len[datah.lenp] + 1 : -1,
+		 tdata ? datah.len[datah.lenp] : -1,
 		 tdata ? (EEPROM_LEN - sizeof(datah)) / datah.dsz : -1,
 		 c - count_prev);
 	_render(s);
