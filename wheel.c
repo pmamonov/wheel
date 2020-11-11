@@ -140,10 +140,11 @@ int data_append(struct dh *dh, unsigned long d)
 	plen = &dh->len[dh->lenp];
 	loff = (void *)plen - (void *)dh;
 	off = sizeof(*dh) + dh->dsz * (*plen);
-	*plen += 1;
 
 	if (off + dh->dsz > ROM_SZ)
 		return -ENOSPC;
+
+	*plen += 1;
 
 	eeprom_write_block(&d, (void *)off, dh->dsz); /* little endian */
 	eeprom_write_block(plen, (void *)loff, sizeof(*plen));
