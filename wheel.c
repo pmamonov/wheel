@@ -22,8 +22,6 @@
 #define KEY_UP		0xd
 #define KEY_DOWN	0x7
 
-#define ROM_SZ		1024
-
 struct dh {
 	uint32_t magic;
 #define DATA_MAGIC	0xda7ada7a
@@ -141,7 +139,7 @@ int data_append(struct dh *dh, unsigned long d)
 	loff = (void *)plen - (void *)dh;
 	off = sizeof(*dh) + dh->dsz * (*plen);
 
-	if (off + dh->dsz > ROM_SZ)
+	if (off + dh->dsz > EEPROM_LEN)
 		return -ENOSPC;
 
 	*plen += 1;
