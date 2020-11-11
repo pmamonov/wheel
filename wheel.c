@@ -12,6 +12,8 @@
 #include "time.h"
 #include "menu.h"
 
+#include "bbuart.h"
+
 #define HZ	10
 #define TIM_START_VAL (0x10000ul - F_CPU / 64 / HZ)
 
@@ -181,7 +183,8 @@ struct menu_it	mit_clock, mit_clock_day,
 struct menu_it	mit_wheel, mit_period, mit_start;
 
 struct menu_it	mit_data, mit_data_start,
-		mit_data_per, mit_data_np, mit_data_view;
+		mit_data_per, mit_data_np,
+		mit_data_view, mit_data_send;
 
 struct menu_it *clock_apply(struct menu_it *m)
 {
@@ -512,7 +515,59 @@ struct menu_it *dv_next(struct menu_it *m)
 struct menu_it mit_data_view = {
 	.render = data_view_r,
 	.x = 0b1100,
-	.lrud = {dv_prev, dv_next, &mit_data_np, 0},
+	.lrud = {dv_prev, dv_next, &mit_data_np, &mit_data_send},
+};
+
+void data_send_r(struct menu_it *m)
+{
+	char s[LCD_BS];
+
+	snprintf(s, LCD_BS, "DOWNLOAD DATA");
+	_render(s);
+}
+
+struct menu_it *data_send(struct menu_it *m)
+{
+	uint16_t n = datah.len[datah.lenp];
+	uint32_t crc = -1;
+	int i;
+	
+	if (!(PIND & BBUART_TX)) {
+		unsigned long t = clock() + 2 * HZ;
+
+		_render("COM PORT BLOCKED");
+		while (clock() < t)
+			;
+		goto out;
+	}
+
+	_render("SENDING DATA");
+
+	GICR &= ~(1 << INT1);
+	bbuart_init();
+
+	bbuart_write((void *)&datah.time, sizeof(datah.time), &crc);
+	bbuart_write((void *)&datah.period, sizeof(datah.period), &crc);
+	bbuart_write((void *)&datah.dsz, sizeof(datah.dsz), &crc);
+	bbuart_write((void *)&n, sizeof(n), &crc);
+	for (i = 0; i < n; i++) {
+		unsigned long x = data_get(&datah, i);
+
+		bbuart_write((void *)&x, datah.dsz, &crc);
+	}
+	crc ^= 0xffffffff;
+	bbuart_write((void *)&crc, sizeof(crc), NULL);
+
+	bbuart_deinit();	
+	GICR |= (1 << INT1);
+out:
+	return m;
+}
+
+struct menu_it mit_data_send = {
+	.render = data_send_r,
+	.x = 0b0100,
+	.lrud = {0, data_send, &mit_data_view, 0},
 };
 
 int main(void)
