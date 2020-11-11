@@ -1,7 +1,7 @@
 MCU=atmega32
 HZ=1843200
 
-OBJ=wheel.o lcd.o time.o menu.o
+OBJ=wheel.o lcd.o time.o menu.o bbuart.o
 
 CC=avr-gcc
 OBJCOPY=avr-objcopy
